@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkfivem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { 
+            font-family: 'Chakra Petch', sans-serif; 
+            overflow: hidden; 
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #0b0f1a;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+
+        #sidebar-content {
+            flex: 1 1 0%;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .player-card:hover { transform: translateX(5px); background-color: #1e293b; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="text-slate-300">
+
+    <nav class="bg-[#161d31] border-b border-white/5 p-4 shadow-2xl flex-shrink-0 z-20">
+        <div class="max-w-full mx-auto flex flex-col lg:flex-row gap-4 items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="bg-blue-600 p-2 rounded-lg shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+                    <i class="fa-solid fa-tower-broadcast text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white leading-none tracking-tighter">FIVEM <span class="text-blue-500">Check</span></h1>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-[0.2em] mt-1 font-semibold">check id fivem</p>
+                </div>
+            </div>
+            
+            <div class="flex w-full lg:max-w-3xl gap-2">
+                <input type="text" id="server_ip" placeholder="ระบุ Server IP (เช่น 168.x.x.x:30120)" 
+                    class="flex-1 bg-[#0b0f1a] border border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500 transition-all text-white">
+                <button onclick="loadPlayers()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg">
+                    <i class="fa-solid fa-rotate"></i> <span>check</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex flex-1 overflow-hidden">
+        
+        <aside class="w-full md:w-80 lg:w-96 bg-[#111729] border-r border-white/5 flex flex-col h-full shadow-2xl">
+            <div class="p-4 bg-[#161d31]/50 border-b border-white/5 flex-shrink-0">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-sm"></i>
+                    <input type="text" id="search_input" onkeyup="filterPlayers()" placeholder="ค้นหาชื่อ หรือ ID ผู้เล่น..." 
+                        class="w-full bg-[#0b0f1a] border-none rounded-lg pl-10 pr-4 py-2.5 focus:ring-1 focus:ring-blue-500 outline-none text-xs text-white">
+                </div>
+            </div>
+            
+            <div class="px-4 py-2 text-[11px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/5 flex justify-between flex-shrink-0 bg-[#0b0f1a]/50">
+                <span>Player List</span>
+                <span id="count_num" class="text-blue-500">0 ONLINE</span>
+            </div>
+
+            <div id="sidebar-content" class="custom-scrollbar p-2 bg-[#0b0f1a]/30">
+                <div id="player_sidebar" class="space-y-1">
+                    <div class="flex flex-col items-center justify-center py-20 opacity-20 text-center px-6">
+                        <i class="fa-solid fa-users-viewfinder text-5xl mb-4"></i>
+                        <p class="text-sm">กรุณาระบุ IP เซิร์ฟเวอร์ 👤</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main id="player_detail" class="hidden md:flex flex-1 bg-[#0b0f1a] items-center justify-center p-8 overflow-y-auto custom-scrollbar relative">
+            <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
+                <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600 rounded-full blur-[120px]"></div>
+            </div>
+            
+            <div class="text-center relative z-10 opacity-30">
+                <div class="w-24 h-24 bg-[#161d31] rounded-3xl flex items-center justify-center text-slate-600 text-4xl mx-auto mb-6 border border-white/5 shadow-2xl">
+                    <i class="fa-solid fa-id-card-clip"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2 uppercase tracking-widest">Select a Player</h2>
+                <p class="text-slate-500 max-w-xs mx-auto text-sm italic">คลิกเลือกชื่อเพื่อเช็คข้อมูล</p>
+            </div>
+        </main>
+    </div>
+
+    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 bg-blue-600 text-white px-6 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 font-bold text-sm">
+        <i class="fa-solid fa-check-circle"></i> คัดลอก ID แล้ว!
+    </div>
+
+    <script>
+        let allPlayers = [];
+
+        async function loadPlayers() {
+            const ip = document.getElementById('server_ip').value;
+            if(!ip) return;
+            
+            const sidebar = document.getElementById('player_sidebar');
+            sidebar.innerHTML = '<div class="text-center py-20"><i class="fa-solid fa-spinner animate-spin text-blue-500 text-3xl"></i></div>';
+
+            const formData = new FormData();
+            formData.append('server_ip', ip);
+
+            try {
+                const response = await fetch('/fetch_all', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (response.ok) {
+                    allPlayers = data;
+                    document.getElementById('count_num').innerText = `${data.length} ONLINE`;
+                    renderSidebar(allPlayers);
+                    localStorage.setItem('last_ip', ip);
+                } else {
+                    sidebar.innerHTML = `<div class="p-4 text-red-400 text-xs text-center font-bold">${data.error}</div>`;
+                }
+            } catch (e) {
+                sidebar.innerHTML = `<p class="text-red-400 p-8 text-center text-xs italic">CONNECTION FAILED 🔗</p>`;
+            }
+        }
+
+        function renderSidebar(players) {
+            const sidebar = document.getElementById('player_sidebar');
+            if(players.length === 0) {
+                sidebar.innerHTML = '<p class="text-center text-slate-500 py-10 text-xs">ไม่พบผู้เล่น</p>';
+                return;
+            }
+            sidebar.innerHTML = players.map(p => `
+                <button onclick="showDetail(${p.id})" class="player-card w-full text-left p-3 rounded-xl hover:bg-[#1e293b] transition-all flex items-center justify-between group border border-transparent hover:border-white/5 mb-1 active:scale-95">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-[#161d31] border border-white/5 flex items-center justify-center text-[10px] font-bold text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                            ${p.id}
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-slate-200 text-sm truncate w-32 md:w-40">${p.name}</span>
+                            <span class="text-[9px] text-slate-500 uppercase tracking-tighter">Active Connection</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] ${p.ping < 60 ? 'text-green-500' : 'text-yellow-500'} font-black">${p.ping}ms</span>
+                </button>
+            `).join('');
+        }
+
+        function filterPlayers() {
+            const term = document.getElementById('search_input').value.toLowerCase();
+            const filtered = allPlayers.filter(p => 
+                p.name.toLowerCase().includes(term) || p.id.toString().includes(term)
+            );
+            renderSidebar(filtered);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            const toast = document.getElementById('toast');
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2000);
+        }
+
+        function showDetail(id) {
+            const p = allPlayers.find(x => x.id == id);
+            const detailView = document.getElementById('player_detail');
+            
+            const avatarImg = p.discord 
+                ? `https://img.lany.io/discord/avatars/${p.discord}?size=256` 
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=1e293b&color=3b82f6&bold=true`;
+
+            detailView.classList.remove('items-center', 'justify-center');
+            detailView.innerHTML = `
+                <div class="max-w-4xl w-full animate-fade-in space-y-6 self-start md:mt-4 pb-10">
+                    <div class="bg-[#161d31] rounded-3xl p-8 border border-white/5 flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-5"><i class="fa-solid fa-fingerprint text-9xl"></i></div>
+                        
+                        <div class="relative group">
+                            <img src="${avatarImg}" class="w-32 h-32 rounded-[2rem] border-4 border-blue-600/20 shadow-2xl object-cover relative z-10" onerror="this.src='https://ui-avatars.com/api/?name=${p.name}'">
+                            <div class="absolute -inset-1 bg-blue-600 rounded-[2.2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                        </div>
+
+                        <div class="flex-1 text-center md:text-left z-10">
+                            <div class="flex items-center justify-center md:justify-start gap-4 mb-2">
+                                <h2 class="text-4xl font-extrabold text-white tracking-tight uppercase">${p.name}</h2>
+                                <span class="bg-blue-600 text-white text-[10px] px-3 py-1 rounded-md font-bold">ID: ${p.id}</span>
+                            </div>
+                            <div class="flex flex-wrap justify-center md:justify-start gap-4 text-xs text-slate-400 font-semibold uppercase">
+                                <span><i class="fa-solid fa-globe text-blue-500 mr-1 text-[10px]"></i> ${p.endpoint}</span>
+                                <span class="text-green-500"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Connected</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-[#111729] rounded-3xl border border-white/5 p-6 shadow-xl space-y-6">
+                            <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+                                <i class="fa-solid fa-id-badge text-blue-500"></i> Identifiers
+                            </h3>
+                            
+                            <div class="bg-[#161d31] p-4 rounded-2xl border border-white/5 flex items-center gap-4">
+                                <div class="w-10 h-10 bg-indigo-600/10 rounded-xl flex items-center justify-center text-indigo-400"><i class="fa-brands fa-discord text-xl"></i></div>
+                                <div class="flex-1">
+                                    <p class="text-[10px] text-slate-500 font-bold uppercase">Discord ID</p>
+                                    <p class="text-sm text-indigo-200 font-mono">${p.discord || 'Not Linked'}</p>
+                                </div>
+                                ${p.discord ? `<button onclick="copyToClipboard('${p.discord}')" class="text-slate-600 hover:text-white transition-colors"><i class="fa-solid fa-copy"></i></button>` : ''}
+                            </div>
+
+                            <div class="bg-[#161d31] p-4 rounded-2xl border border-white/5 flex items-center gap-4">
+                                <div class="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-white"><i class="fa-brands fa-steam text-xl"></i></div>
+                                <div class="flex-1">
+                                    <p class="text-[10px] text-slate-500 font-bold uppercase">Steam Profile</p>
+                                    <p class="text-sm text-slate-300 font-mono truncate w-40 md:w-48">${p.steam_id64 || 'No Steam Account'}</p>
+                                </div>
+                                ${p.steam ? `<a href="${p.steam}" target="_blank" class="text-blue-500 hover:text-blue-400"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="bg-[#111729] rounded-3xl border border-white/5 p-6 shadow-xl space-y-6">
+                            <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+                                <i class="fa-solid fa-signal text-green-500"></i> Network Status
+                            </h3>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-[#161d31] p-6 rounded-2xl border border-white/5 text-center">
+                                    <p class="text-slate-500 text-[10px] uppercase font-bold mb-1">Latency</p>
+                                    <p class="text-4xl font-black ${p.ping < 60 ? 'text-green-500' : 'text-yellow-500'}">${p.ping}<span class="text-xs ml-1">MS</span></p>
+                                </div>
+                                <div class="bg-[#161d31] p-6 rounded-2xl border border-white/5 text-center flex flex-col items-center justify-center">
+                                    <p class="text-slate-500 text-[10px] uppercase font-bold mb-1">Ping Level</p>
+                                    <div class="flex items-center gap-2 font-black text-xl ${p.ping < 60 ? 'text-green-500' : 'text-yellow-500'}">
+                                        ${p.ping < 60 ? 'EXCELLENT' : (p.ping < 150 ? 'GOOD' : 'POOR')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-blue-600/5 p-4 rounded-2xl border border-blue-600/10">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[10px] text-blue-400 font-bold uppercase">Endpoint Address</span>
+                                    <i class="fa-solid fa-shield-halved text-blue-500/50 text-[10px]"></i>
+                                </div>
+                                <p class="text-sm font-mono text-slate-400">${p.endpoint}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.onload = () => {
+            const savedIp = localStorage.getItem('last_ip');
+            if(savedIp) document.getElementById('server_ip').value = savedIp;
+        }
+    </script>
+</body>
+</html>
